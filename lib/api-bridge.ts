@@ -72,7 +72,8 @@ export const put = async (url: string, data:string | FormData, TOKEN: string) =>
             headers: {
                 "Authorization": `Bearer ${TOKEN}` || '',
                 "Content-Type": typesokk
-            }
+            },
+            
         }) 
         return {
             status: true,
