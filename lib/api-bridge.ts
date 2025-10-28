@@ -65,33 +65,41 @@ export const post = async ( url: string, data: string | FormData, TOKEN: string 
     }
 }
 
-export const put = async (url: string, data:string | FormData, TOKEN: string) => {
+export const put = async (url: string, data:string | FormData | Record<string, any>, TOKEN: string) => {
     try {
-        const typesokk : string = (typeof data == 'string') ? "application/json" : "multiple/form-data"
-        let result = await axiosInstance.put(url, data, {
-            headers: {
-                "Authorization": `Bearer ${TOKEN}` || '',
-                "Content-Type": typesokk
-            },
-            
-        }) 
+        let headers: Record<string, string> = {
+            Authorization: `Bearer ${TOKEN}` || "",
+        };
+
+        if(data instanceof FormData) {
+
+        } else if (typeof data === "object") {
+            headers["Content-Type"] = "application/json";
+            data = JSON.stringify(data);
+        } else if (typeof data === "string") {
+            headers["Content-Type"] = "application/json"
+        }
+
+        const result = await axiosInstance.put(url, data, { headers })
+    
         return {
             status: true,
-            data: result.data
-        }
+            data: result.data,
+        } 
     } catch (error) {
-        const err = error as AxiosError<{ message: string, code: number }>
+        const err = error as AxiosError<{ message:string; code: number }>
         if (err.response) {
             console.log(err.response.data.message);
             return {
                 status: false,
-                message: `${err.response.data.message}`
+                message: err.response.data.message
             }
-        }
-        console.log(err.response)
+        } 
+
+        console.log(err)
         return {
             status: false,
-            mesage: `Somthing wrong when trying to PUT`
+            message: `Something wrong when trying to PUT ${error}`
         }
     }
 }

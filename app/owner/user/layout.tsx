@@ -2,6 +2,7 @@ import OwnerTemplate from "@/components/owner"
 import Sidebar from "@/components/owner/sideBar"
 import Topbar from "@/components/owner/TopBar"
 import sideList from "../sideList"
+import { ToastContainer } from "react-toastify"
 
 export const metadata = {
     title: `Dashboard | KosHunter`,
@@ -15,6 +16,9 @@ type propsLayout = {
 const rootLayout = ({ children }: propsLayout) => {
     return (
          <OwnerTemplate title="User Setting" id="userSetting" sideList={sideList}>
+            <ToastContainer 
+                containerId={`toastUser`}
+            />
             {children}
          </OwnerTemplate>
     )

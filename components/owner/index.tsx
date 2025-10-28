@@ -27,7 +27,7 @@ type ownerProps = {
 const getUSer = async (): Promise<IUser | null> => {
     try {
         const TOKEN = await getCookies("token")
-        const url = `${BASE_API_URL}/user/get`
+        const url = `${BASE_API_URL}/user/profile`
         const { data } = await get(url, TOKEN);
 
         if(data?.status) return data.data;

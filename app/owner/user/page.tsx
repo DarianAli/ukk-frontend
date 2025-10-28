@@ -1,115 +1,76 @@
-
-
 "use client";
 
 import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
-import { put, post, get } from "@/lib/api-bridge";
-import { FileUploadDemo } from "@/components/FileUpload";
-import { getCookie } from "@/lib/client-cookies";
+import { put, get } from "@/lib/api-bridge";
+import { getCookie, storeCookie } from "@/lib/client-cookies";
 import { BASE_API_URL } from "@/global";
+import UserFileUploadModal from './UserFileUpload'
+import { InputGroupComponent } from "@/components/inputComponent";
 
 export default function UserSettingPage() {
   const router = useRouter();
 
-  // 🔹 Ambil user ID dan token dari cookie
-  const userId = getCookie("idUser") ?? ""; 
+  const userId = getCookie("idUser") ?? "";
   const token = getCookie("token") ?? "";
 
   const [user, setUser] = useState({
     name: "",
     email: "",
+    password: "",
     profile: "",
   });
 
+  const [showModal, setShowModal] = useState(false);
+
   useEffect(() => {
-    const fetchOneUser = async () => {
+    const fetchUser = async () => {
       try {
         const { status, data } = await get(`${BASE_API_URL}/user/profile`, token);
-        if ( status && data?.data ) {
+        if (status && data?.data) {
           const u = data.data;
           setUser({
             name: u.name ?? "",
             email: u.email ?? "",
+            password: u.password ?? "",
             profile: u.profile
               ? `${BASE_API_URL}/user-photo/${u.profile}`
-              : "image/defautl.png",
-          })
+              : "/image/default.png",
+          });
         }
       } catch (error) {
-        console.log("Error fetching profile:", error)
+        console.error("Error fetching profile:", error);
       }
-    }
+    };
 
-    if (token) fetchOneUser();
+    if (token) fetchUser();
   }, [token]);
 
-  const [file, setFile] = useState<File | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-
-  const handleChange = (key: string, value: string) => {
-    setUser((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleFileUpload = (files: File[]) => {
-    if (files && files.length > 0) {
-      const file = files[0];
-      setFile(file);
-      setPreviewImage(URL.createObjectURL(file));
-      setUploadedFiles(files);
-    }
-  };
-
-  // 🔹 Update name & email
   const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
     try {
-      e.preventDefault();
-      const url = `${BASE_API_URL}/user/${userId}`;
-      const { name, email } = user;
-      const payload = new FormData();
-      payload.append("name", name || "");
-      payload.append("email", email || "");
+      const url = `${BASE_API_URL}/user/update/${userId}`;
+      const payload = {
+        name: user.name,
+        email: user.email
+      }
 
-      const { data } = await post(url, payload, token ?? "");
+      const { data } = await put(url, payload, token);
       if (data?.status) {
-        toast(data?.message, { hideProgressBar: true, type: "success", containerId: "toastUser" });
+        storeCookie("name", user.name)
+        storeCookie("email", data.data.profile ?? "")
+        toast.success(data.message, { containerId: "toastUser" });
         setTimeout(() => router.refresh(), 1000);
       } else {
-        toast(data?.message, { hideProgressBar: true, type: "warning", containerId: "toastUser" });
+        toast.warning(data.message, { containerId: "toastUser" });
       }
     } catch (error) {
-      console.log(error);
-      toast("Something went wrong", { hideProgressBar: true, type: "error", containerId: "toastUser" });
+      console.error(error);
+      toast.error("Something went wrong", { containerId: "toastUser" });
     }
   };
-
-  // 🔹 Update foto profil
-  const handleSaveProfile = async () => {
-    try {
-      if (!file) return;
-      const url = `${BASE_API_URL}/user/upload/${userId}`;
-      const payload = new FormData();
-      payload.append("picture", file);
-
-      const { data } = await post(url, payload, token);
-      if (data?.status) {
-        setShowModal(false);
-        toast(data?.message, { hideProgressBar: true, type: "success", containerId: "toastUser" });
-        setTimeout(() => router.refresh(), 1000);
-      } else {
-        toast(data?.message, { hideProgressBar: true, type: "warning", containerId: "toastUser" });
-      }
-    } catch (error) {
-      console.log(error);
-      toast("Something went wrong", { hideProgressBar: true, type: "error", containerId: "toastUser" });
-    }
-  };
-
-  // ...
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -124,7 +85,7 @@ export default function UserSettingPage() {
         >
           <div className="relative w-72 h-72 rounded-full overflow-hidden shadow-2xl border-4 border-border">
             <img
-              src={user.profile || "/image/defautl.png"}
+              src={user.profile || "/image/default.png"}
               alt="Profile Picture"
               className="w-full h-full object-cover"
             />
@@ -150,27 +111,22 @@ export default function UserSettingPage() {
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-muted-foreground text-sm font-medium mb-2">
-                Full Name
-              </label>
-              <input
+            <div className="p-5">
+              <InputGroupComponent
+                id={`name`}
                 type="text"
                 value={user.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                className="w-full border border-input bg-background rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
+                onChange={(val) => setUser({ ...user, name: val })}
+                required={true}
+                label="Name"
               />
-            </div>
-
-            <div>
-              <label className="block text-muted-foreground text-sm font-medium mb-2">
-                Email
-              </label>
-              <input
-                type="email"
+              <InputGroupComponent 
+                id={"email"}
+                type="text"
                 value={user.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                className="w-full border border-input bg-background rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
+                onChange={(val) => setUser({ ...user, email: val })}
+                required={true}
+                label="Email"
               />
             </div>
 
@@ -186,63 +142,22 @@ export default function UserSettingPage() {
         </motion.div>
       </div>
 
-      {/* MODAL: UPDATE PROFILE PICTURE */}
+      {/* MODAL */}
       <AnimatePresence>
         {showModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4"
-            onClick={() => setShowModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", damping: 20 }}
-              className="bg-card p-8 rounded-2xl w-full max-w-2xl shadow-2xl relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 className="text-2xl font-semibold mb-6 text-center text-foreground">
-                Update Profile Picture
-              </h2>
-
-              <div className="flex justify-center mb-6">
-                <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-primary shadow-lg">
-                  <img
-                    src={previewImage || user.profile || "/image/defautl.png"}
-                    alt="Profile Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <FileUploadDemo onChange={handleFileUpload} />
-              </div>
-
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={handleSaveProfile}
-                  disabled={!file}
-                  className="px-8 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
-                >
-                  Done
-                </button>
-                <button
-                  onClick={() => router.back()}
-                  className="px-8 py-3 bg-secondary text-secondary-foreground rounded-xl hover:bg-secondary/90 transition-all hover:scale-105"
-                >
-                  Cancel
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+          <UserFileUploadModal
+            userId={userId}
+            token={token}
+            currentProfile={user.profile}
+            onClose={() => setShowModal(false)}
+            onUploaded={(newProfileUrl) =>
+              setUser((prev) => ({ ...prev, profile: newProfileUrl }))
+            }
+          />
         )}
       </AnimatePresence>
 
-      {/* ✅ FOOTER */}
+      {/* FOOTER */}
       <footer className="mt-24 bg-[#2E3B36] text-primary-foreground py-10 px-10 rounded-3xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
