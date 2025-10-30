@@ -10,3 +10,14 @@ export interface IUser {
     createdAt: string;
     updatedAt: string;
 }
+
+export interface IKos {
+    idKos: string;
+    uuid: string;
+    name: string;
+    addres: string;
+    foto: string
+    price_per_month: number;
+    createdAt: string;
+    updatedAt: string;
+}

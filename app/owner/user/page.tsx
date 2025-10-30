@@ -83,7 +83,7 @@ export default function UserSettingPage() {
           transition={{ duration: 0.5 }}
           className="w-1/2 flex flex-col justify-center items-center bg-white relative overflow-hidden space-y-6 rounded-2xl"
         >
-          <div className="relative w-72 h-72 rounded-full overflow-hidden shadow-2xl border-4 border-border">
+          <div className="relative w-72 h-72 rounded-full overflow-hidden shadow-xl border-4 border-border">
             <img
               src={user.profile || "/image/default.png"}
               alt="Profile Picture"
@@ -104,7 +104,7 @@ export default function UserSettingPage() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-1/2 flex flex-col justify-center px-16"
+          className="w-1/2 flex flex-col justify-center px-16 bg-[#E2E0CB] rounded-3xl"
         >
           <h1 className="text-4xl font-semibold text-foreground mb-6">
             User Settings
