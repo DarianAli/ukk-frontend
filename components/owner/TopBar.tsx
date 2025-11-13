@@ -3,31 +3,44 @@
 import { useState, useEffect, KeyboardEvent, useRef } from "react";
 import { CiSearch } from "react-icons/ci";
 import Image from "next/image";
-import { BASE_API_URL, BASE_IMAGE_PROFILE } from "@/global";
-import { IKos } from "@/app/types";
+import { BASE_API_URL, BASE_IMAGE_PROFILE, BASE_IMAGE_KOS } from "@/global";
+import { IKos, IUser } from "@/app/types";
 import { getCookie } from "@/lib/client-cookies";
 import { useRouter } from "next/navigation";
 import { get } from "@/lib/api-bridge";
+import { cn } from "@/lib/utils";
+import { Building2, MapPin } from "lucide-react";
 
 type ownerProps = {
   id: string;
   title: string;
-  kos: IKos | null;
+  kosList: IKos[];
   search?: string;
   url?: string;
+  user?: IUser | null;
 };
 
-export default function Topbar({ id, title, kos, search = "", url = "" }: ownerProps) {
+export default function Topbar({
+  id,
+  title,
+  kosList,
+  search = "",
+  url = "",
+  user,
+}: ownerProps) {
   const [keyWord, setKeyWord] = useState<string>(search);
   const [username, setUserName] = useState<string>("");
   const [profile, setProfile] = useState<string>("");
   const [suggestion, setSuggestion] = useState<IKos[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [isSearchFocus, setIsSearchFocus] = useState<boolean>(false);
+  const [query, setQuery] = useState("")
+  const filetedKos = kosList.filter((k) => k.name.toLowerCase().includes(query.toLowerCase()))
 
   const router = useRouter();
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Fetch KOS
+  // Fetch KOS suggestion
   const fetchKos = async (text: string) => {
     if (!text.trim()) {
       setSuggestion([]);
@@ -40,12 +53,8 @@ export default function Topbar({ id, title, kos, search = "", url = "" }: ownerP
       if (!token) return;
 
       const { data } = await get(`${BASE_API_URL}/kos/get?search=${text}`, token);
-
-      if (data?.status) {
-        setSuggestion(data.data.slice(0, 5)); // ✅ ambil 5 data teratas
-      } else {
-        setSuggestion([]);
-      }
+      if (data?.status) setSuggestion(data.data.slice(0, 5));
+      else setSuggestion([]);
     } catch (error) {
       console.log("ERROR FETCH KOS:", error);
       setSuggestion([]);
@@ -54,32 +63,50 @@ export default function Topbar({ id, title, kos, search = "", url = "" }: ownerP
     }
   };
 
-  // ✅ debounce
+  // Debounce search
   useEffect(() => {
     const t = setTimeout(() => fetchKos(keyWord), 500);
     return () => clearTimeout(t);
   }, [keyWord]);
 
-  // ✅ Close dropdown when click outside
+  // Tutup dropdown + reset ukuran saat klik luar
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setSuggestion([]);
+        setIsSearchFocus(false); // reset ke ukuran awal
       }
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // ✅ Enter search
-  const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && url) {
-      router.push(`${url}?search=${keyWord}`);
+  // Tekan enter untuk search
+  const handleSearch = async () => {
+    const TOKEN = getCookie("token") || ""
+
+    if (!keyWord.trim()) {
       setSuggestion([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data } = await get(`${BASE_API_URL}/kos/get`, TOKEN);
+      if (data?.status) {
+        const results = data.data.filter((item: IKos) =>
+          item.name.toLowerCase().includes(keyWord.toLowerCase())
+        );
+        setSuggestion(results);
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ Ambil profile user
+  // Ambil data profile user
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -87,7 +114,6 @@ export default function Topbar({ id, title, kos, search = "", url = "" }: ownerP
         if (!token) return;
 
         const { status, data } = await get(`${BASE_API_URL}/user/profile`, token);
-
         if (status && data?.data) {
           const u = data.data;
           setUserName(u.name ?? "");
@@ -100,8 +126,7 @@ export default function Topbar({ id, title, kos, search = "", url = "" }: ownerP
           if (n) setUserName(n);
           if (p) setProfile(`${BASE_IMAGE_PROFILE}/${p}`);
         }
-      } catch (error) {
-        console.log("ERROR FETCH PROFILE:", error);
+      } catch {
         const n = getCookie("name");
         const p = getCookie("profile");
         if (n) setUserName(n);
@@ -113,68 +138,117 @@ export default function Topbar({ id, title, kos, search = "", url = "" }: ownerP
   }, []);
 
   return (
-    <header className="flex justify-between items-center px-6 py-11 bg-white rounded-bl-2xl rounded-tl-2xl sticky top-0 z-30">
-      
-      {/* TITLE */}
-      <h1 className="text-4xl font-bold text-[#2B2D42]">{title}</h1>
+<header className="flex justify-between items-center px-6 py-6 bg-white rounded-bl-2xl rounded-tl-2xl sticky top-0 z-30">
+      {/* LEFT: Judul halaman */}
+      <div
+        className={cn(
+          "flex items-center gap-3 transition-all duration-300",
+          isSearchFocus && "opacity-0 w-0 overflow-hidden"
+        )}
+      >
+        <h1 className="text-2xl font-semibold text-gray-800">{title}</h1>
+      </div>
 
-      {/* RIGHT SECTION */}
-      <div className="flex items-center gap-6">
-
-        {/* ✅ SEARCH BAR (relative untuk dropdown) */}
-        <div ref={searchRef} className="relative flex items-center bg-gray-100 px-3 py-2 rounded-xl w-full sm:w-64 md:w-80 lg:w-96 max-w-md">
-
-          <CiSearch size={30} className="text-gray-500 mr-2" />
-
-          <input
-            type="text"
-            placeholder="Search kos..."
-            className="bg-transparent outline-none text-sm text-gray-700 w-full"
-            onKeyUp={handleSearch}
-            value={keyWord}
-            onChange={(e) => setKeyWord(e.target.value)}
-          />
-
-          {/* ✅ DROPDOWN */}
-          {suggestion.length > 0 && (
-            <div className="absolute top-12 left-0 w-full bg-white shadow-lg rounded-lg border z-50 max-h-60 overflow-auto">
-              {suggestion.map((item) => (
-                <div
-                  key={item.idKos}
-                  onClick={() => router.push(`${url}?search=${item.name}`)}
-                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-700"
-                >
-                  {item.name}
-                </div>
-              ))}
-            </div>
+      {/* SEARCH BAR */}
+      <div className="flex items-center gap-6 flex-1 justify-end">
+        <div
+          ref={searchRef}
+          className={cn(
+            "relative transition-all duration-300",
+            isSearchFocus ? "flex-1 mx-8" : "w-80"
           )}
-
-          {/* ✅ LOADING */}
-          {loading && (
-            <div className="absolute top-12 left-0 w-full bg-white shadow-lg rounded-lg border z-50 px-3 py-2 text-sm text-gray-500">
-              Loading...
-            </div>
-          )}
-
-        </div>
-
-        {/* ✅ PROFILE SECTION */}
-        <div className="flex items-center gap-2 cursor-pointer">
-          <div className="w-10 h-10 rounded-full overflow-hidden">
-            <Image
-              src={profile || "/image/default.png"}
-              alt="Profile"
-              width={40}
-              height={40}
-              className="w-full h-full object-cover"
+        >
+          <div className="flex items-center bg-white px-4 py-2.5 rounded-xl border transition-all duration-300 hover:bg-muted">
+            <CiSearch size={20} className="text-muted-foreground mr-3 flex-shrink-0" />
+            <input
+              type="text"
+              placeholder="Search kos..."
+              className="bg-transparent outline-none text-sm text-gray-700 w-full placeholder:text-muted-foreground"
+              onKeyUp={handleSearch}
+              value={keyWord}
+              onChange={(e) => setKeyWord(e.target.value)}
+              onFocus={() => setIsSearchFocus(true)}
             />
           </div>
-          <span className="text-sm font-medium text-gray-800">
-            {username || "User"}
-          </span>
+
+          {/* Dropdown hasil search */}
+          {(suggestion.length > 0 || loading) && isSearchFocus && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white shadow-lg rounded-xl border border-border z-50 max-h-96 overflow-auto">
+              {loading ? (
+                <div className="px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  Searching...
+                </div>
+              ) : (
+                suggestion.map((item, index) => (
+                  <div
+                    key={item.idKos}
+                    onClick={() => {
+                      router.push(`${url}?search=${item.name}`);
+                      setSuggestion([]);
+                      setIsSearchFocus(false);
+                    }}
+                    className={cn(
+                      "px-4 py-3 hover:bg-muted/30 cursor-pointer transition-colors duration-150 flex items-center gap-3",
+                      index === 0 && "rounded-t-xl",
+                      index === suggestion.length - 1 && "rounded-b-xl"
+                    )}
+                  >
+                    <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden">
+                      {item.foto && item.foto.length > 0 ? (
+                        <Image
+                          src={`${BASE_IMAGE_KOS}/${item.foto[0].foto}`}
+                          alt={item.name}
+                          width={64}
+                          height={64}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Building2 className="text-muted-foreground" size={24} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-foreground truncate">
+                        {item.name}
+                      </h4>
+                      {item.address && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <MapPin size={12} />
+                          {item.address}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
+        {/* USER PROFILE */}
+        <div
+          className={cn(
+            "flex items-center gap-3 transition-all duration-300",
+            isSearchFocus && "opacity-0 w-0 overflow-hidden"
+          )}
+        >
+          <div className="flex items-center gap-2 cursor-pointer">
+            <div className="w-10 h-10 rounded-full overflow-hidden">
+              <Image
+                src={profile || "/image/default.png"}
+                alt="Profile"
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <span className="text-sm font-medium text-gray-800">
+              {username || "User"}
+            </span>
+          </div>
+        </div>
       </div>
     </header>
   );

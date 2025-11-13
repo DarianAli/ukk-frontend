@@ -189,3 +189,30 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes fade {
+  0% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Haluskan transisi fade agar tidak flicker putih */
+.animate-fade {
+  animation: fade 16s infinite;
+  animation-timing-function: ease-in-out;
+  background-color: transparent;
+  will-change: opacity;
+}
+

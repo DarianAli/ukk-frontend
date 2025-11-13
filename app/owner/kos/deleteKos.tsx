@@ -10,7 +10,7 @@ import { ButtonSuccess, ButtonWarning } from "@/components/button"
 import Modal from "@/components/Modal"
 import { getCookie } from "@/lib/client-cookies"
 
-const deleteKos = ({ selectedKos }: {selectedKos: IKos}) => {
+const DeleteKos = ({ selectedKos }: {selectedKos: IKos}) => {
     const [isShow, setIsShow] = useState<boolean>(false)
     const [kos, setKos] = useState<IKos>({ ...selectedKos })
     const router = useRouter()
@@ -103,4 +103,4 @@ const deleteKos = ({ selectedKos }: {selectedKos: IKos}) => {
     )
 }
 
-export default deleteKos
+export default DeleteKos

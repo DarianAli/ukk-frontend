@@ -15,9 +15,16 @@ export interface IKos {
     idKos: string;
     uuid: string;
     name: string;
-    addres: string;
-    foto: string
+    address: string;
+    foto: IFotoKos[]
     price_per_month: number;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface IFotoKos {
+    idFoto: number;
+    uuid: string;
+    foto: string;
+    kosId: number
 }
