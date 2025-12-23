@@ -12,6 +12,7 @@ import { FileUploadDemo } from "@/components/FileUpload"
 import { ButtonSuccess, ButtonWarning } from "@/components/button"
 import Modal from "@/components/Modal"
 import FileUpload from "@/components/FileInput"
+import { Files } from "lucide-react"
 
 const AddKos = () => {
     const [ isShow, setIsShow ] = useState<boolean>(false);
@@ -19,66 +20,86 @@ const AddKos = () => {
         idKos: ``,
         uuid: ``,
         name: ``,
-        addres: ``,
-        foto: ``,
-        price_per_month: 0,
+        address: ``,
+        foto: [],
+        price_per_month: ``,
         createdAt: ``,
         updatedAt: ``,
     });
+
     const router = useRouter();
     const TOKEN = getCookie("token") || "";
-    const [file, setFile] = useState<File | null>(null)
     const formRef = useRef<HTMLFormElement>(null)
+
     const openModal = () => {
         setKos({
             idKos: ``,
             uuid: ``,
             name: ``,
-            addres: ``,
-            foto:``,
-            price_per_month: 0,
+            address: ``,
+            foto: [],
+            price_per_month: ``,
             createdAt: ``,
             updatedAt: ``,
         });
+
+
         setIsShow(true);
         if (formRef.current) formRef.current.reset();
     };
-    const handleSubmit = async (e: FormEvent) => {
-        try {
-            e.preventDefault()
-            const url = `${BASE_API_URL}/kos`;
-            const {name, addres, price_per_month} = kos;
-            const payload = new FormData()
-            payload.append("name", name || "");
-            payload.append("addres", addres || "")
-            payload.append("price_per_month", price_per_month !== undefined ? price_per_month.toString() : "0")
 
-            if (file !== null) payload.append("foto", file || "")
-            const { data } = await post(url, payload, TOKEN);
-            if (data?.status) {
-                setIsShow(false)
-                toast(data?.message, {
-                    hideProgressBar: true,
-                    containerId: `toastKos`,
-                    type: `success`
-                })
-                setTimeout(() => router.refresh(), 1000)
-            } else {
-                toast(data?.message, {
-                    hideProgressBar: true,
-                    containerId: `toastKos`,
-                    type: `warning`
-                })
-            }
-        } catch (error) {
-            console.log(error)
-            toast(`something wrong`, {
+
+    const handleCreateKos = async () => {
+        const url = `${BASE_API_URL}/kos/add`;
+
+        const payload = new FormData()
+        payload.append("name", kos.name);
+        payload.append("address", kos.address)
+        payload.append("price_per_month", kos.price_per_month)
+
+        const { data } = await post(url, payload, TOKEN);
+
+        if (data?.status) {
+            toast("Kos Berhasil dibuat!", {
                 hideProgressBar: true,
                 containerId: `toastKos`,
-                type: `error`
+                type: "success"
             })
+            return true
+        } else {
+            toast(data?.message, {
+                hideProgressBar: true,
+                containerId: `toastKos`,
+                type: "warning"
+            })
+            return false
         }
     }
+
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault()
+
+        try {
+            const created = await handleCreateKos()
+            if (!created) return;
+
+            toast("Berhasil membuat kos!", {
+                hideProgressBar: true,
+                containerId: `toastKos`,
+                type: "success"
+            })
+
+            setIsShow(false)
+            setTimeout(() => router.refresh(), 800)
+        } catch (error) {
+            console.log(error);
+            toast("Something went wrong", {
+                hideProgressBar: true,
+                containerId: `toastKos`,
+                type: "warning"
+            })
+        }
+    } 
     return (
         <div>
             <ButtonSuccess type="button" onClick={() => openModal()}>
@@ -100,7 +121,7 @@ const AddKos = () => {
                 </div>
             </ButtonSuccess>
             <Modal isShow={isShow} onClose={(state) => setIsShow(state)}>
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} ref={formRef}>
                 {/* Modal Header */}
                 <div className="sticky top-0 bg-[#4E635E] px-5 pb-3 shadow">
                     <div className="w-full flex items-center">
@@ -146,34 +167,24 @@ const AddKos = () => {
                         label="Name"
                     />
                     <InputGroupComponent 
-                        id={`addres`}
+                        id={`address`}
                         type="text"
-                        value={kos.addres}
-                        onChange={(val) => setKos({ ...kos, addres: val })}
+                        value={kos.address}
+                        onChange={(val) => setKos({ ...kos, address: val })}
                         required={true}
-                        label="addres"
+                        label="address"
                     />
                     <InputGroupComponent 
                         id={`price_per_month`}
                         type="number"
                         value={kos.price_per_month.toString()}
-                        onChange={(val) => setKos({ ...kos, price_per_month: Number(val) })}
+                        onChange={(val) => setKos({ ...kos, price_per_month: val })}
                         required={true}
                         label="Price"
                     />
-                    <FileUpload 
-                        acceptTypes={[
-                            "application/pdf",
-                            "image/png",
-                            "image/jpeg",
-                            "image/jpg",
-                        ]}
-                        label="Upload Foto Profile"
-                        maxSize={2048}
-                        onChange={(file) => console.log("File:", file)}
-                        id={`foto`}
-                    />
+
                 </div>
+                
                 {/* modal body end */}
 
                 {/* modal footer */}

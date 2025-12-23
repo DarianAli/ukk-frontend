@@ -1,20 +1,15 @@
-import React from "react";
 import Link from "next/link";
 
-interface SideBarItemProps {
-    icon: React.ReactNode;
-    label: string;
-    path: string;
-    active?: boolean;
+export default function SideBarItem({ icon, label, path, active }: any) {
+  return (
+    <Link
+      href={path}
+      className={`flex items-center p-2 my-2 ${
+        active ? "text-white font-semibold" : "text-gray-300"
+      }`}
+    >
+      <span className="mr-3">{icon}</span>
+      <span className="flex-1">{label}</span>
+    </Link>
+  );
 }
-
-const SideBarItem = ({ icon, label, path, active }: SideBarItemProps) => {
-    return (
-        <Link href={path} className={`flex items-center p-2 my-2 ${active ? 'text-primary' : 'text-gray'}`}> 
-            <span className="mr-3">{icon}</span>
-            <span className="flex-1">{label}</span>
-        </Link>
-    )
-}
-
-export default SideBarItem;

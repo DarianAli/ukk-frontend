@@ -17,7 +17,7 @@ export interface IKos {
     name: string;
     address: string;
     foto: IFotoKos[]
-    price_per_month: number;
+    price_per_month: string;
     createdAt: string;
     updatedAt: string;
 }

@@ -1,46 +1,45 @@
 "use client";
 
-import { useState, useEffect, KeyboardEvent, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CiSearch } from "react-icons/ci";
 import Image from "next/image";
-import { BASE_API_URL, BASE_IMAGE_PROFILE, BASE_IMAGE_KOS } from "@/global";
+import { BASE_API_URL, BASE_IMAGE_KOS } from "@/global";
 import { IKos, IUser } from "@/app/types";
 import { getCookie } from "@/lib/client-cookies";
 import { useRouter } from "next/navigation";
 import { get } from "@/lib/api-bridge";
 import { cn } from "@/lib/utils";
-import { Building2, MapPin } from "lucide-react";
+import { Building2, MapPin, Menu } from "lucide-react";
 
-type ownerProps = {
+
+type KosItem = {
+  id: string;
+  name: string;
+  address?: string;
+  image?: string
+}
+
+type User = {
+  name: string;
+  profile?: string;
+}
+
+type TopbarProps = {
   id: string;
   title: string;
-  kosList: IKos[];
-  search?: string;
-  url?: string;
-  user?: IUser | null;
+  user: IUser | null;
+  onMenuClick: () => void;
+  onSearch?: (keyword: string) => void
 };
 
-export default function Topbar({
-  id,
-  title,
-  kosList,
-  search = "",
-  url = "",
-  user,
-}: ownerProps) {
-  const [keyWord, setKeyWord] = useState<string>(search);
-  const [username, setUserName] = useState<string>("");
-  const [profile, setProfile] = useState<string>("");
+export default function Topbar({ id, title, user, onMenuClick, onSearch }: TopbarProps) {
+  const [keyWord, setKeyWord] = useState("");
   const [suggestion, setSuggestion] = useState<IKos[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [isSearchFocus, setIsSearchFocus] = useState<boolean>(false);
-  const [query, setQuery] = useState("")
-  const filetedKos = kosList.filter((k) => k.name.toLowerCase().includes(query.toLowerCase()))
-
+  const [loading, setLoading] = useState(false);
+  const [isSearchFocus, setIsSearchFocus] = useState(false);
   const router = useRouter();
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Fetch KOS suggestion
   const fetchKos = async (text: string) => {
     if (!text.trim()) {
       setSuggestion([]);
@@ -55,166 +54,96 @@ export default function Topbar({
       const { data } = await get(`${BASE_API_URL}/kos/get?search=${text}`, token);
       if (data?.status) setSuggestion(data.data.slice(0, 5));
       else setSuggestion([]);
-    } catch (error) {
-      console.log("ERROR FETCH KOS:", error);
+    } catch {
       setSuggestion([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Debounce search
   useEffect(() => {
-    const t = setTimeout(() => fetchKos(keyWord), 500);
+    const t = setTimeout(() => fetchKos(keyWord), 400);
     return () => clearTimeout(t);
   }, [keyWord]);
 
-  // Tutup dropdown + reset ukuran saat klik luar
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
+    const handler = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setIsSearchFocus(false);
         setSuggestion([]);
-        setIsSearchFocus(false); // reset ke ukuran awal
       }
     };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  // Tekan enter untuk search
-  const handleSearch = async () => {
-    const TOKEN = getCookie("token") || ""
-
-    if (!keyWord.trim()) {
-      setSuggestion([]);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const { data } = await get(`${BASE_API_URL}/kos/get`, TOKEN);
-      if (data?.status) {
-        const results = data.data.filter((item: IKos) =>
-          item.name.toLowerCase().includes(keyWord.toLowerCase())
-        );
-        setSuggestion(results);
-      }
-    } catch (error) {
-      console.error("Search error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Ambil data profile user
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = getCookie("token");
-        if (!token) return;
-
-        const { status, data } = await get(`${BASE_API_URL}/user/profile`, token);
-        if (status && data?.data) {
-          const u = data.data;
-          setUserName(u.name ?? "");
-          setProfile(
-            u.profile ? `${BASE_API_URL}/user-photo/${u.profile}` : "/image/default.png"
-          );
-        } else {
-          const n = getCookie("name");
-          const p = getCookie("profile");
-          if (n) setUserName(n);
-          if (p) setProfile(`${BASE_IMAGE_PROFILE}/${p}`);
-        }
-      } catch {
-        const n = getCookie("name");
-        const p = getCookie("profile");
-        if (n) setUserName(n);
-        if (p) setProfile(`${BASE_IMAGE_PROFILE}/${p}`);
-      }
-    };
-
-    fetchProfile();
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   return (
-<header className="flex justify-between items-center px-6 py-6 bg-white rounded-bl-2xl rounded-tl-2xl sticky top-0 z-30">
-      {/* LEFT: Judul halaman */}
-      <div
-        className={cn(
-          "flex items-center gap-3 transition-all duration-300",
-          isSearchFocus && "opacity-0 w-0 overflow-hidden"
-        )}
-      >
-        <h1 className="text-2xl font-semibold text-gray-800">{title}</h1>
+    <header className="flex items-center justify-between px-4 md:px-6 py-4 bg-white sticky top-0 z-30 rounded-bl-2xl rounded-tl-2xl">
+
+      {/* Left section */}
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={onMenuClick}
+          className="md:hidden p-2 -ml-2 text-gray-700 hover:text-white hover:bg-muted rounded-lg transition-colors"
+        >
+          <Menu size={28}/>
+        </button>
+
+        <h1 className="hidden md:block text-2xl font-semibold text-gray-800">{title}</h1>
       </div>
 
-      {/* SEARCH BAR */}
-      <div className="flex items-center gap-6 flex-1 justify-end">
-        <div
-          ref={searchRef}
-          className={cn(
-            "relative transition-all duration-300",
-            isSearchFocus ? "flex-1 mx-8" : "w-80"
-          )}
-        >
-          <div className="flex items-center bg-white px-4 py-2.5 rounded-xl border transition-all duration-300 hover:bg-muted">
-            <CiSearch size={20} className="text-muted-foreground mr-3 flex-shrink-0" />
+      {/* SEARCH */}
+      <div className="flex items-center flex-1 md:justify-end px-4 gap-3">
+        <div ref={searchRef} className="relative hidden sm:block w-48 md:w-72 max-w-xs md:max-w-sm">
+          <div className="flex items-center bg-white px-4 md:px-5 py-2.5 rounded-xl border border-border hover:border-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+            <CiSearch size={20} className="text-gray-500 mr-3 md:mr-4 flex-shrink-0" />
             <input
               type="text"
               placeholder="Search kos..."
-              className="bg-transparent outline-none text-sm text-gray-700 w-full placeholder:text-muted-foreground"
-              onKeyUp={handleSearch}
+              className="bg-transparent outline-none text-sm text-gray-700 w-full"
               value={keyWord}
               onChange={(e) => setKeyWord(e.target.value)}
               onFocus={() => setIsSearchFocus(true)}
             />
           </div>
 
-          {/* Dropdown hasil search */}
+          {/* DROPDOWN */}
           {(suggestion.length > 0 || loading) && isSearchFocus && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white shadow-lg rounded-xl border border-border z-50 max-h-96 overflow-auto">
+            <div className="absolute top-full left-0 right-0 bg-white shadow-lg rounded-xl border mt-2 z-50 max-h-96 overflow-auto">
               {loading ? (
-                <div className="px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <div className="px-4 py-3 text-sm text-gray-500 flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
                   Searching...
                 </div>
               ) : (
-                suggestion.map((item, index) => (
+                suggestion.map((item) => (
                   <div
                     key={item.idKos}
                     onClick={() => {
-                      router.push(`${url}?search=${item.name}`);
+                      router.push(`/owner/kos?search=${item.name}`);
                       setSuggestion([]);
                       setIsSearchFocus(false);
                     }}
-                    className={cn(
-                      "px-4 py-3 hover:bg-muted/30 cursor-pointer transition-colors duration-150 flex items-center gap-3",
-                      index === 0 && "rounded-t-xl",
-                      index === suggestion.length - 1 && "rounded-b-xl"
-                    )}
+                    className="px-4 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
                   >
-                    <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden">
+                    <div className="w-16 h-16 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
                       {item.foto && item.foto.length > 0 ? (
                         <Image
                           src={`${BASE_IMAGE_KOS}/${item.foto[0].foto}`}
                           alt={item.name}
                           width={64}
                           height={64}
-                          className="w-full h-full object-cover"
+                          className="object-cover w-full h-full"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Building2 className="text-muted-foreground" size={24} />
-                        </div>
+                        <Building2 className="text-gray-400 w-full h-full p-3" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-foreground truncate">
-                        {item.name}
-                      </h4>
+
+                    <div className="min-w-0">
+                      <h4 className="font-medium text-gray-900 truncate">{item.name}</h4>
                       {item.address && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <p className="text-xs text-gray-500 flex items-center gap-1">
                           <MapPin size={12} />
                           {item.address}
                         </p>
@@ -227,27 +156,22 @@ export default function Topbar({
           )}
         </div>
 
-        {/* USER PROFILE */}
-        <div
-          className={cn(
-            "flex items-center gap-3 transition-all duration-300",
-            isSearchFocus && "opacity-0 w-0 overflow-hidden"
-          )}
-        >
-          <div className="flex items-center gap-2 cursor-pointer">
-            <div className="w-10 h-10 rounded-full overflow-hidden">
-              <Image
-                src={profile || "/image/default.png"}
-                alt="Profile"
-                width={40}
-                height={40}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <span className="text-sm font-medium text-gray-800">
-              {username || "User"}
-            </span>
-          </div>
+        {/* PROFILE */}
+        <div className="flex items-center gap-3 md:gap-4">
+          <Image
+            src={
+              user?.profile
+                ? `${BASE_API_URL}/user-photo/${user.profile}`
+                : "/image/default.png"
+            }
+            alt="Profile"
+            width={40}
+            height={40}
+            className="rounded-full object-cover"
+          />
+          <span className="text-sm font-medium text-gray-800 max-w-[120px] truncate">
+            {user?.name ?? "User"}
+          </span>
         </div>
       </div>
     </header>

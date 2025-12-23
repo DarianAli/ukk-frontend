@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-white overflow-x-hidden">
+    <div className="flex flex-col w-full bg-white overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative w-full min-h-[600px] md:min-h-[700px] overflow-hidden">
         <div className="container mx-auto px-4 py-12 md:py-0">

@@ -20,7 +20,7 @@ let sideList: IPropSide[] = [
     },
     {
         id: `user`,
-        path: `owner/user`,
+        path: `/owner/user`,
         label: `User`,
         icon: <FaUser />
     },

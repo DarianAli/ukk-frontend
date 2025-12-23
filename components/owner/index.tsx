@@ -1,3 +1,4 @@
+
 import { ReactNode } from "react";
 import Sidebar from "./sideBar";
 import { BASE_API_URL } from "@/global";
@@ -5,6 +6,7 @@ import { getCookies } from "@/lib/server-cookie";
 import { IKos, IUser } from "@/app/types";
 import { get } from "@/lib/api-bridge";
 import Topbar from "./TopBar";
+import OwnerLayoutClient from "./indexClient";
 
 type sideType = {
     id: string,
@@ -59,20 +61,16 @@ const OwnerTemplate = async ({ children, id, title, sideList, user }: ownerProps
     const profile : IUser | null = await getUSer()
     const kosData : IKos[] | null = await getKos()
 
-
     return (
-    <div className="flex h-screen overflow-hidden bg-white">
-      {/* Sidebar (fixed) */}
-      <Sidebar sideList={sideList} title={title} id={id} user={profile} />
-
-      {/* Main content area */}
-        <div className="flex flex-col flex-1 ml-28 h-full">
-            <Topbar id={id} title={title} user={profile} kosList={kosData ?? []} />
-            <main className="flex-1 bg-white p-6 overflow-auto">
-                {children}
-            </main>
-        </div>
-    </div>
+     <OwnerLayoutClient
+        id={id}
+        title={title}
+        sideList={sideList}
+        user={profile}
+        kosList={kosData ?? []}
+     >
+        {children}
+     </OwnerLayoutClient>
     )
 }
 

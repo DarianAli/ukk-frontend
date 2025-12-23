@@ -157,6 +157,10 @@ export default function UserSettingPage() {
         )}
       </AnimatePresence>
 
+      <div>
+        
+      </div>
+
       {/* FOOTER */}
       <footer className="mt-24 bg-[#2E3B36] text-primary-foreground py-10 px-10 rounded-3xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
