@@ -15,7 +15,7 @@ type propsLayout = {
 
 const rootLayout = ({ children }: propsLayout) => {
     return (
-         <OwnerTemplate title="User Setting" id="userSetting" sideList={sideList}>
+         <OwnerTemplate title="Profile Setting" id="userSetting" sideList={sideList}>
             <ToastContainer 
                 containerId={`toastUser`}
             />

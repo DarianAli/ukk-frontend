@@ -107,7 +107,7 @@ export default function UserSettingPage() {
           className="w-1/2 flex flex-col justify-center px-16 bg-[#E2E0CB] rounded-3xl"
         >
           <h1 className="text-4xl font-semibold text-foreground mb-6">
-            User Settings
+            Profile Settings
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-5">

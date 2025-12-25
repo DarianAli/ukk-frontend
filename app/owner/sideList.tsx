@@ -3,6 +3,7 @@ import { GoHomeFill } from "react-icons/go";
 import { FaUser } from "react-icons/fa";
 import { MdMenuBook } from "react-icons/md";
 import { GrTransaction } from "react-icons/gr";
+import { CgProfile } from "react-icons/cg";
 
 interface IPropSide {
     id: string, 
@@ -22,6 +23,12 @@ let sideList: IPropSide[] = [
         id: `user`,
         path: `/owner/user`,
         label: `User`,
+        icon: <CgProfile />
+    },
+    {
+        id: `userList`,
+        path: `/owner/userList`,
+        label: `UserList`,
         icon: <FaUser />
     },
     {

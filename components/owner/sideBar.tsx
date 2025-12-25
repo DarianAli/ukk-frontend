@@ -16,6 +16,7 @@ import { TbBrandBooking } from "react-icons/tb";
 import { IoLogOut } from "react-icons/io5";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react"
+import { CgProfile } from "react-icons/cg";
 
 type sideType = {
   id: string;
@@ -37,7 +38,8 @@ type ownerProps = {
 
 const menuItems = [
   { label: "Dashboard", icon: <FaHome size={22}/>, path: "/owner/dashboard" },
-  { label: "User", icon: <FaUser size={22}/>, path: "/owner/user" },
+  { label: "User", icon: <CgProfile size={22}/>, path: "/owner/user" },
+  { label: "UserList", icon: <FaUser size={22}/>, path: "/owner/userList" },
   { label: "Kos", icon: <FaBuildingUser size={22}/>, path: "/owner/kos" },
   { label: "Booking", icon: <TbBrandBooking size={22}/>, path: "/owner/booking" }
 ]
