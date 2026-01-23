@@ -1,231 +1,195 @@
-// app/owner/dashboard/page.tsx
-import Image from "next/image";
-import Link from "next/link";
-import { BASE_API_URL, BASE_IMAGE_KOS } from "@/global";
+"use client"
 
-type Kos = {
-  idKos: number;
-  name: string;
-  address: string;
-  price_per_month: string;
-  foto: { foto: string }[];
-};
+import { BASE_API_URL } from "@/global"
+import StatCard from "./StatCard"
+import { useState, useEffect } from "react"
+import { getCookie } from "@/lib/client-cookies"
+import { get } from "@/lib/api-bridge"
+import { IBooking } from "@/app/types"
+import StatusBadge from "./StatusBadge"
 
-export default async function DashboardPage() {
-  const res = await fetch(`${BASE_API_URL}/kos/recommendations`, {
-    cache: "no-store",
-  });
-  const result = await res.json();
-  const rekomendasi: Kos[] = result.data || [];
+type Booking = {
+  idBooks: number
+  startDate: string
+  status: string
+  user_id: {
+    email: string
+  }
+  kos_id: {
+    name: string
+  }
+}
 
-  const images = [
-    "/image/gambar1.jpg",
-    "/image/gambar2.jpg",
-    "/image/gambar3.jpg",
-    "/image/gambar4.jpg",
-  ];
+export default function DashboardPage() {
+  /* ===== FETCH DATA ===== */
+
+
+  const [totalKos, setTotalKos] = useState<number>(0)
+  const [totalReview, setTotalReview] = useState<number>(0)
+  const [totalBook, setTotalBook] = useState<number>(0)
+  const [data, setData] = useState<IBooking[]>([])
+  
+
+  const TOKEN = getCookie("token")|| ""
+
+  const getBooking = async () => {
+    try {
+      const url = `${BASE_API_URL}/book/get-ActiveBook`
+      const { data } = await get(url, TOKEN)
+
+      if (data?.status && Array.isArray(data.data)) {
+        setTotalBook(data.data.length)
+      }
+    } catch (error) {
+      console.error("Failed to fetch book count", error)
+    }
+  }
+    useEffect(() => {
+    getBooking()
+  }, [])
+
+  const getReview = async () => {
+    try {
+      const url = `${BASE_API_URL}/review/get-perOwner`
+      const { data } = await get(url, TOKEN)
+
+      if (data?.status && typeof(data.data)) {
+        setTotalReview(data.data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch kos count", error)
+    }
+  }
+
+  useEffect(() => {
+    getReview()
+  }, [])
+
+  console.log(totalReview)
+
+  const getKos = async () => {
+    try {
+      const url = `${BASE_API_URL}/kos/my`
+      const { data } = await get(url, TOKEN)
+
+      if (data?.status && Array.isArray(data.data)) {
+        setTotalKos(data.data.length)
+      }
+    } catch (error) {
+      console.error("Failed to fetch kos count", error)
+    }
+  }
+
+  useEffect(() => {
+    getKos()
+  }, [])
+
+    const fetchBooking = async () => {
+      const token = getCookie("token") || ""
+      const res = await get(`${BASE_API_URL}/book/get-OwnerBook`, token)
+      if (res?.data?.status) {
+        setData(res.data.data)
+      }
+    }
+  
+    useEffect(() => {
+      fetchBooking()
+    }, [])
+  
+
 
   return (
-    <div className="flex flex-col w-full bg-white overflow-x-hidden">
-      {/* Hero Section */}
-      <section className="relative w-full min-h-[600px] md:min-h-[700px] overflow-hidden">
-        <div className="container mx-auto px-4 py-12 md:py-0">
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center min-h-[600px] md:min-h-[700px]">
-            {/* Left Content */}
-            <div className="flex flex-col justify-center space-y-6 z-10 order-2 md:order-1 text-center md:text-left">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#4E635E] leading-tight">
-                Belum punya kos?{" "}
-                <span className="block text-[#A6B4AE] mt-2">
-                  Temukan pilihan terbaikmu!
-                </span>
-              </h1>
-              <p className="text-[#4E635E]/80 text-base md:text-lg max-w-md mx-auto md:mx-0">
-                Jelajahi kos yang nyaman, aman, dan sesuai kebutuhanmu hanya di{" "}
-                <strong className="text-[#4E635E]">KosHunter</strong>.
-              </p>
-              <div>
-                <button className="bg-[#4E635E] text-white rounded-full px-6 sm:px-8 py-4 sm:py-6 text-base md:text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95">
-                  Temukan Sekarang
-                </button>
-              </div>
-            </div>
-
-            {/* Right Slideshow */}
-            <div className="relative h-64 sm:h-80 md:h-[600px] rounded-3xl overflow-hidden shadow-2xl order-1 md:order-2">
-              {images.map((img, index) => (
-                <div
-                  key={index}
-                  className="absolute inset-0 opacity-0 animate-fade"
-                  style={{
-                    animationDelay: `${index * 4}s`,
-                  }}
-                >
-                  <Image
-                    src={img}
-                    alt={`Kos slideshow ${index + 1}`}
-                    fill
-                    className="object-cover object-center"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    priority={index === 0}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+    <div className="min-h-screen flex flex-col p-6 gap-8">
+      
+      {/* ===== MAIN CONTENT ===== */}
+      <main className="flex-1 space-y-8">
+        
+        {/* ===== STAT CARDS ===== */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <StatCard title="Total Kos" value={totalKos} />
+          <StatCard title="Total Review" value={totalReview} />
+          <StatCard title="Active Bookings" value={totalBook} />
+          {/* <StatCard title="Revenue" value={`Rp ${revenue}`} /> */}
         </div>
-      </section>
 
-      {/* Rekomendasi Kos */}
-      <section className="container mx-auto px-4 py-12 sm:py-16">
-        <div className="mb-8 text-center md:text-left">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#4E635E] mb-2">
-            Rekomendasi Kos Untukmu
+        {/* ===== RECENT BOOKINGS ===== */}
+        <div className="bg-white rounded-xl shadow-sm border">
+          <h2 className="text-lg font-semibold p-5 border-b">
+            Recent Bookings
           </h2>
-          <p className="text-[#4E635E]/60 text-sm sm:text-base">
-            Pilihan kos terbaik yang kami rekomendasikan khusus untuk kamu
-          </p>
+
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-gray-500">
+              <tr>
+                <th className="text-left px-5 py-3">Guest</th>
+                <th className="text-left px-5 py-3">Kos</th>
+                <th className="text-left px-5 py-3">Date</th>
+                <th className="text-left px-5 py-3">Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {data.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="text-center py-5 text-gray-500">
+                    Belum ada booking aktif
+                  </td>
+                </tr>
+              ) : (
+                data.map((b) => (
+                  <tr key={b.idBooks} className="border-t">
+                    <td className="px-5 py-3">
+                      {b.user_id?.email ?? "-"}
+                    </td>
+                    <td className="px-5 py-3">
+                      {b.kos_id?.name ?? "-"}
+                    </td>
+                    <td className="px-5 py-3">
+                      {new Date(b.startDate).toLocaleDateString("id-ID")}
+                    </td>
+                    <td className="px-5 py-3">
+                      <StatusBadge status={b.status} />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
 
-        {/* Horizontal scroll container */}
-        <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth -mx-4 px-4">
-          {rekomendasi.map((kos) => (
-            <Link
-              key={kos.idKos}
-              href={`/society/kos/${kos.idKos}`}
-              className="flex-shrink-0 w-64 sm:w-72 md:w-80 group cursor-pointer snap-start"
-            >
-              <div className="relative h-48 sm:h-56 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500">
-                <Image
-                  src={
-                    kos.foto && kos.foto.length > 0
-                      ? `${BASE_IMAGE_KOS}/${kos.foto[0].foto}`
-                      : "/image/no-image.jpg"
-                  }
-                  alt={kos.name}
-                  fill
-                  className="object-cover object-center transition-transform duration-500 group-hover:scale-110"
-                  sizes="(max-width: 768px) 256px, 320px"
-                />
+      </main>
 
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent transition-opacity duration-300 group-hover:from-black/80"></div>
-
-                {/* Content */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 text-white">
-                  <h3 className="text-lg font-semibold mb-1 truncate group-hover:text-[#A6B4AE] transition-colors duration-300">
-                    {kos.name}
-                  </h3>
-                  <p className="text-xs sm:text-sm opacity-90 truncate mb-1 sm:mb-2">
-                    {kos.address}
-                  </p>
-                  <p className="text-sm sm:text-base font-bold">
-                    {kos.price_per_month}
-                  </p>
-                </div>
-
-                {/* Hover indicator */}
-                <div className="absolute top-3 sm:top-4 right-3 sm:right-4 w-8 sm:w-10 h-8 sm:h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <svg
-                    className="w-4 sm:w-5 h-4 sm:h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-[#4E635E] text-white py-12 px-4 mt-20 rounded-t-3xl">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 text-center md:text-left">
-            <div>
-              <h3 className="text-2xl font-bold mb-3">KosHunter</h3>
-              <p className="text-sm text-white/80 leading-relaxed max-w-sm mx-auto md:mx-0">
-                Temukan kos terbaik dengan mudah, cepat, dan terpercaya.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-3 text-lg">Navigasi</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link
-                    href="/"
-                    className="text-white/80 hover:text-white transition-colors duration-200"
-                  >
-                    Beranda
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/tentang"
-                    className="text-white/80 hover:text-white transition-colors duration-200"
-                  >
-                    Tentang Kami
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/bantuan"
-                    className="text-white/80 hover:text-white transition-colors duration-200"
-                  >
-                    Bantuan
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-3 text-lg">Kontak</h4>
-              <div className="space-y-2 text-sm text-white/80">
-                <p>Email: darianaliapr@gmail.com</p>
-                <p>Instagram: @darianaliapr</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-white/20 mt-8 pt-6 text-center">
-            <p className="text-sm text-white/70">
-              © {new Date().getFullYear()} Darian Ali Aprianto.
+      {/* ===== FOOTER ===== */}
+      <footer className="bg-[#2E3B36] text-primary-foreground py-10 px-10 rounded-3xl">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-sm">
+          <div>
+            <h3 className="text-xl font-semibold mb-2">KosHunter</h3>
+            <p className="opacity-80">
+              Temukan kos terbaik dengan mudah, cepat, dan terpercaya.
             </p>
           </div>
+
+          <div>
+            <h4 className="font-semibold mb-2">Navigasi</h4>
+            <ul className="space-y-1 opacity-80">
+              <li><a href="/owner/dashboard">Beranda</a></li>
+              <li><a href="/tentang">Tentang Kami</a></li>
+              <li><a href="/bantuan">Bantuan</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-2">Kontak</h4>
+            <p className="opacity-80">Email: darianaliapr@gmail.com</p>
+            <p className="opacity-80">Instagram: @darianaliapr</p>
+          </div>
+        </div>
+
+        <div className="border-t border-primary-foreground/20 mt-8 pt-4 text-center text-sm opacity-70">
+          © {new Date().getFullYear()} Darian Ali Aprianto.
         </div>
       </footer>
 
-      {/* Slideshow CSS Animation
-      <style jsx global>{`
-        @keyframes fade {
-          0% {
-            opacity: 0;
-          }
-          5% {
-            opacity: 1;
-          }
-          25% {
-            opacity: 1;
-          }
-          30% {
-            opacity: 0;
-          }
-          100% {
-            opacity: 0;
-          }
-        }
-        .animate-fade {
-          animation: fade 16s infinite;
-        }
-      `}</style> */}
     </div>
-  );
+  )
 }

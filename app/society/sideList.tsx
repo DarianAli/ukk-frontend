@@ -5,7 +5,6 @@ import { MdMenuBook } from "react-icons/md";
 import { GrTransaction } from "react-icons/gr";
 import { CgProfile } from "react-icons/cg";
 import { Settings2 } from "lucide-react";
-import { IoNotifications } from "react-icons/io5";
 
 interface IPropSide {
     id: string, 
@@ -17,39 +16,27 @@ interface IPropSide {
 let sideList: IPropSide[] = [
     {
         id: `dashboard`,
-        path: `/owner/dashboard`,
+        path: `/society/dashboard`,
         label: `Dashboard`,
         icon: <GoHomeFill />
     },
     {
         id: `user`,
-        path: `/owner/user`,
+        path: `/society/user`,
         label: `User`,
         icon: <FaUser />
     },
     {
-        id: `facilities`,
-        path: `/owner/facilities`,
-        label: `Facilities`,
-        icon: <Settings2 />
-    },
-    {
-        id: `menu`,
-        path: `/owner/kos`,
+        id: `kos`,
+        path: `/society/kos`,
         label: `kos`,
         icon: <MdMenuBook />
     },
     {
         id: `Booking`,
-        path: `/owner/Booking`,
+        path: `/society/Booking`,
         label: `Booking`,
         icon: <GrTransaction />
-    },
-    {
-        id: `Reviews`,
-        path: `/owner/review`,
-        label: `Review`,
-        icon: <IoNotifications />
     }
 ]
 

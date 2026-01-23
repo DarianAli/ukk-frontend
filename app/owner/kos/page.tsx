@@ -22,7 +22,7 @@ const KosPage =  () => {
 
     const fetchKos = async () => {
         try {
-            const url = `${BASE_API_URL}/kos/get`
+            const url = `${BASE_API_URL}/kos/my`
             const { data } = await get(url, TOKEN)
 
             if (data?.status) {
@@ -43,7 +43,7 @@ const KosPage =  () => {
             <h4 className="text-xl font-bold mb-2">
                 <span className="text-primary">Kos</span> Data
             </h4>
-            <p className="text-sm text-secondary mb-4">
+            <p className="text-sm text-primary mb-4">
                 This page display Kos data, allowing you to view details and manage kos property by adding, editing or deleting them
             </p>
             <div className="flex justify-between items-center mb-4">
@@ -58,7 +58,7 @@ const KosPage =  () => {
                 </AlertInfo>
                 :
                 <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         {kos.map((kos) => (
                             <KosCard
                                 key={kos.idKos}

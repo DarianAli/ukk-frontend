@@ -100,7 +100,7 @@ export default function UserSettingPage() {
                   <img
                     src={user.profile}
                     alt="Profile Picture"
-                    className=" w-full h-full object-cover object-center transition-transform duration-300 hover:scale-105"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
                   <span className="text-4xl font-bold text-primary">
@@ -116,7 +116,7 @@ export default function UserSettingPage() {
             )}
           </div>
           <h2 className="mt-4 text-xl font-semibold text-foreground">{user.name}</h2>
-          <p className="text-sm text-muted-foreground">Owner</p>
+          <p className="text-sm text-muted-foreground">Society</p>
         </div>
 
         {/* Quick Stats BROWW */}
@@ -292,7 +292,7 @@ export default function UserSettingPage() {
             <h4 className="font-semibold mb-2">Navigasi</h4>
               <ul className="space-y-1 text-sm opacity-80">
                 <li>
-                  <a href="/owner/dashboard" className="hover:opacity-100 transition">
+                  <a href="/society/dashboard" className="hover:opacity-100 transition">
                     Beranda
                   </a>
                 </li>

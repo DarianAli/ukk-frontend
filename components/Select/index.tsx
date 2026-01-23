@@ -17,14 +17,14 @@ const Select = ({ value, onChange, className, id, required, children, label }: P
         <div className="w-full flex-col gap-1 my-1">
             {
                 label ?
-                <strong className="text-sm font-bold text-slate-800">
+                <strong className="text-xs font-bold text-slate-500">
                     {label}
                     {required == true ? <sup className="text-red-600">*&#41;</sup> : <></>}
                 </strong> :
                 <></>
             }
 
-            <div className="w-full flex items-center gap-1 bg-white border-slate-500 rounded-md border">
+            <div className="w-full h-14 flex items-center gap-1 bg-white border-slate-500 rounded-xl border">
                 <select 
                     id={id} 
                     value={value} 

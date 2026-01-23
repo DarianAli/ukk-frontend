@@ -2,26 +2,27 @@
 
 import { IKos } from "@/app/types"
 import { BASE_API_URL } from "@/global"
-import { post } from "@/lib/api-bridge"
+import { post, drop } from "@/lib/api-bridge"
 import { getCookie } from "@/lib/client-cookies"
 import { useRouter } from "next/navigation"
 import { FormEvent, useRef, useState } from "react"
 import { toast } from "react-toastify"
 import { InputGroupComponent } from "@/components/inputComponent"
-import { FileUploadDemo } from "@/components/FileUpload"
 import { ButtonSuccess, ButtonWarning } from "@/components/button"
 import Modal from "@/components/Modal"
-import FileUpload from "@/components/FileInput"
-import { Files } from "lucide-react"
+import FasilitasSelector from "./fasilitasSelector"
+import Select from "@/components/Select"
 
 const AddKos = () => {
     const [ isShow, setIsShow ] = useState<boolean>(false);
     const [kos, setKos] = useState<IKos>({
-        idKos: ``,
+        idKos: 0,
         uuid: ``,
         name: ``,
         address: ``,
+        gender: ``,
         foto: [],
+        fasilitas: [],
         price_per_month: ``,
         createdAt: ``,
         updatedAt: ``,
@@ -33,11 +34,13 @@ const AddKos = () => {
 
     const openModal = () => {
         setKos({
-            idKos: ``,
+            idKos: 0,
             uuid: ``,
             name: ``,
             address: ``,
+            gender: ``,
             foto: [],
+            fasilitas: [],
             price_per_month: ``,
             createdAt: ``,
             updatedAt: ``,
@@ -52,12 +55,18 @@ const AddKos = () => {
     const handleCreateKos = async () => {
         const url = `${BASE_API_URL}/kos/add`;
 
-        const payload = new FormData()
-        payload.append("name", kos.name);
-        payload.append("address", kos.address)
-        payload.append("price_per_month", kos.price_per_month)
+        const payload = {
+            name: kos.name,
+            address: kos.address,
+            price_per_month: kos.price_per_month,
+            gender: kos.gender,
+            fasilitas: kos.fasilitas.map( f => ({
+                id: f.idFasilitas,
+                name: f.fasilitas
+            }))
+        }
 
-        const { data } = await post(url, payload, TOKEN);
+        const { data } = await post(url, JSON.stringify(payload), TOKEN);
 
         if (data?.status) {
             toast("Kos Berhasil dibuat!", {
@@ -65,6 +74,7 @@ const AddKos = () => {
                 containerId: `toastKos`,
                 type: "success"
             })
+            router.refresh()
             return true
         } else {
             toast(data?.message, {
@@ -82,22 +92,10 @@ const AddKos = () => {
         try {
             const created = await handleCreateKos()
             if (!created) return;
-
-            toast("Berhasil membuat kos!", {
-                hideProgressBar: true,
-                containerId: `toastKos`,
-                type: "success"
-            })
-
             setIsShow(false)
-            setTimeout(() => router.refresh(), 800)
+            setTimeout(() => router.refresh(), 1000)
         } catch (error) {
             console.log(error);
-            toast("Something went wrong", {
-                hideProgressBar: true,
-                containerId: `toastKos`,
-                type: "warning"
-            })
         }
     } 
     return (
@@ -181,6 +179,52 @@ const AddKos = () => {
                         onChange={(val) => setKos({ ...kos, price_per_month: val })}
                         required={true}
                         label="Price"
+                    />
+                    <Select
+                        className="text-slate-500 p-2"
+                        id={`gender`}
+                        value={kos.gender}
+                        label="Gender"
+                        required={true}
+                        onChange={(val) => setKos({ ...kos, gender: val })}
+                    >
+                        <option value=""> --- Select Gender --- </option>
+                        <option value="mix">MIX</option>
+                        <option value="male">MALE</option>
+                        <option value="female">FEMALE</option>
+                    </Select>
+                    <FasilitasSelector 
+                        value={kos.fasilitas}
+                        onChange={async (newFasilitas) => {
+                            const added = newFasilitas.filter(
+                                nf => !kos.fasilitas.some(f => f.idFasilitas === nf.idFasilitas)
+                            )
+
+                            const removed = kos.fasilitas.filter(
+                                f => !newFasilitas.some(nf => nf.idFasilitas === f.idFasilitas)
+                            )
+
+                            for (const fas of added) {
+                                await post(
+                                    `${BASE_API_URL}/fasility/add-Fasility/kos/${kos.idKos}/fasilitas.${fas.idFasilitas}`,
+                                    undefined,
+                                    TOKEN
+                                )
+                            }
+
+                            // remove
+                            for (const fas of removed) {
+                                await drop(
+                                    `${BASE_API_URL}/kos/${kos.idKos}/fasilitas/${fas.idFasilitas}`,
+                                    TOKEN
+                                )
+                            }
+
+                            setKos(prev => ({
+                                ...prev,
+                                fasilitas: newFasilitas
+                            }))
+                        }}
                     />
 
                 </div>

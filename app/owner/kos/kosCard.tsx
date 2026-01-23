@@ -11,6 +11,9 @@ import { get } from "@/lib/api-bridge"
 import DeleteKos from "./deleteKos"
 import { CiLocationOn } from "react-icons/ci"
 import { LuUpload } from "react-icons/lu"
+import FileUploadModal from "./uploadFoto"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 interface KosCardProps {
     kos: IKos;
@@ -32,7 +35,24 @@ const getKos = async () : Promise<IKos[]> => {
 }
 
 const KosCard = ({ kos, onUpload }: KosCardProps) => {
-    
+    const token = getCookie("token") || ""
+    const [showUpload, setShowUpload] = useState<boolean>(false)
+    const router = useRouter()
+    const gender = (gen: string): React.ReactNode => {
+        if (gen === "mix") {
+            return <span className="bg-[#A7AAE1] text-[#7c81e0] text-sm font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-[#4A4E8A] dark:text-[#A7AAE1]">
+                MIX
+            </span>
+        }
+        if (gen === "male") {
+            return <span className="bg-[#BADFDB] text-[#7fd3cb] text-sm font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-[#2F6F73] dark:text-[#BADFDB]">
+                MALE
+            </span>
+        }
+        return <span className="bg-[#FFBDBD] text-[#f88181] text-sm font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-[#8A3F3F] dark:text-[#FFBDBD]">
+
+        </span>
+    }
 
     return (
         <div className="bg-white rounded-xl shadow-md border overflow-hidden flex flex-col">
@@ -58,7 +78,10 @@ const KosCard = ({ kos, onUpload }: KosCardProps) => {
 
             {/* Body */}
             <div className="p-5 flex flex-col gap-3">
-                <h2 className="font-bold text-lg">{kos.name}</h2>
+                <div className="flex items-center justify-between">
+                    <h2 className="font-bold text-lg">{kos.name}</h2>
+                    {gender(kos.gender)}
+                </div>
                 <div className="flex items-center text-gray-600 text-sm gap-1">
                     <CiLocationOn size={17}/>
                     {kos.address}
@@ -71,15 +94,34 @@ const KosCard = ({ kos, onUpload }: KosCardProps) => {
                 </div>
 
                 {/* Fasility */}
+
                 {/* Farility End */}
 
                     <button 
-                        onClick={onUpload}
+                        onClick={() => setShowUpload(true)}
+                        type="button"
                         className="w-full mt-2 border border-gray-300 rounded-xl py-2 flex items-center justify-center gap-2 hover:bg-gray-50 transition"
                     >
                         <LuUpload size={18}/>
                         Upload Foto
                     </button>
+
+                    {showUpload && (
+                    <FileUploadModal
+                        uploadType="kos"
+                        targetId={kos.idKos.toString()}
+                        token={token}
+                        currentImages={kos.foto.map(
+                        f => `${BASE_API_URL}/kos-photo/${f.foto}`
+                        )}
+                        onUploaded={() => {
+                        onUpload();      // refresh data kos
+                        setShowUpload(false);
+                        }}
+                        onClose={() => setShowUpload(false)}
+                        onSuccess={() => router.refresh()}
+                    />
+                    )}
 
                 <div className="flex gap-2 mt-2">
                     <div className="flex-1">

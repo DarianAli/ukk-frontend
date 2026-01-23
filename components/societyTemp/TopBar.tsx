@@ -1,36 +1,22 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useRef } from "react";
-import { CiSearch } from "react-icons/ci";
-import Image from "next/image";
-import { BASE_API_URL, BASE_IMAGE_KOS } from "@/global";
-import { IKos, IUser } from "@/app/types";
-import { getCookie } from "@/lib/client-cookies";
-import { useRouter } from "next/navigation";
-import { get } from "@/lib/api-bridge";
-import { cn } from "@/lib/utils";
-import { Building2, MapPin, Menu } from "lucide-react";
-
-
-// type KosItem = {
-//   id: string;
-//   name: string;
-//   address?: string;
-//   image?: string
-// }
-
-type User = {
-  name: string;
-  profile?: string;
-}
+import { useState, useEffect, useRef } from "react"
+import { CiSearch } from "react-icons/ci"
+import Image from "next/image"
+import { BASE_API_URL, BASE_IMAGE_KOS } from "@/global"
+import { IKos, IUser } from "@/app/types"
+import { getCookie } from "@/lib/client-cookies"
+import { useRouter } from "next/navigation"
+import { get } from "@/lib/api-bridge"
+import { Building2, MapPin, Menu } from "lucide-react"
 
 type TopbarProps = {
-  id: string;
-  title: string;
-  user: IUser | null;
-  onMenuClick: () => void;
-  onSearch?: (keyword: string) => void
-};
+    id: string;
+    title: string
+    user: IUser | null;
+    onMenuClick: () => void;
+    onSearch?: (keyword: string) => void;
+}
 
 export default function Topbar({ id, title, user, onMenuClick, onSearch }: TopbarProps) {
   const [keyWord, setKeyWord] = useState("");
@@ -120,7 +106,7 @@ export default function Topbar({ id, title, user, onMenuClick, onSearch }: Topba
                   <div
                     key={item.idKos}
                     onClick={() => {
-                      router.push(`/owner/kos?search=${item.name}`);
+                      router.push(`/society/kos?search=${item.name}`);
                       setSuggestion([]);
                       setIsSearchFocus(false);
                     }}
@@ -167,7 +153,7 @@ export default function Topbar({ id, title, user, onMenuClick, onSearch }: Topba
             alt="Profile"
             width={40}
             height={40}
-            className="rounded-full object-center object-cover"
+            className="rounded-full object-cover"
           />
           <span className="text-sm font-medium text-gray-800 max-w-[120px] truncate">
             {user?.name ?? "User"}

@@ -1,22 +1,17 @@
-"use client";
+"use client"
 
-import { ReactNode, useState, useEffect } from "react";
-import Image from "next/image";
-import SideBarItem from "./SideBarItem"
-import { getCookie, removeCookie } from "@/lib/client-cookies";
-import { usePathname, useRouter } from "next/navigation";
-import { IUser } from "@/app/types";
-import { BASE_IMAGE_PROFILE } from "@/global";
-import Link from "next/link";
-import { FaHome } from "react-icons/fa";
-import path from "path";
-import { FaUser } from "react-icons/fa";
-import { FaBuildingUser } from "react-icons/fa6";
-import { TbBrandBooking } from "react-icons/tb";
-import { IoLogOut, IoNotifications } from "react-icons/io5";
-import { cn } from "@/lib/utils";
-import { Settings2, X } from "lucide-react"
-import { CgProfile } from "react-icons/cg";
+import { ReactNode } from "react"
+import Image from "next/image"
+import { removeCookie } from "@/lib/client-cookies"
+import { usePathname, useRouter } from "next/navigation"
+import { IUser } from "@/app/types"
+import Link from "next/link"
+import { FaHome, FaUser } from "react-icons/fa"
+import { FaBuildingUser } from "react-icons/fa6"
+import { TbBrandBooking } from "react-icons/tb"
+import { IoLogOut } from "react-icons/io5"
+import { cn } from "@/lib/utils"
+import { X } from "lucide-react"
 
 type sideType = {
   id: string;
@@ -25,7 +20,7 @@ type sideType = {
   path: string;
 };
 
-type ownerProps = {
+type societyProps = {
   // children: ReactNode;
   id: string;
   title: string;
@@ -37,14 +32,13 @@ type ownerProps = {
 };
 
 const menuItems = [
-  { label: "Dashboard", icon: <FaHome size={22}/>, path: "/owner/dashboard" },
-  { label: "User", icon: <FaUser size={22}/>, path: "/owner/user" },
-  { label: "Kos", icon: <FaBuildingUser size={22}/>, path: "/owner/kos" },
-  { label: "Booking", icon: <TbBrandBooking size={22}/>, path: "/owner/booking" },
-  { label: "Review", icon: <IoNotifications size={22}/>, path: "/owner/review" }
+  { label: "Dashboard", icon: <FaHome size={22}/>, path: "/society/dashboard" },
+  { label: "User", icon: <FaUser size={22}/>, path: "/society/user" },
+  { label: "Kos", icon: <FaBuildingUser size={22}/>, path: "/society/kos" },
+  { label: "Booking", icon: <TbBrandBooking size={22}/>, path: "/society/booking" }
 ]
 
-export default function Sidebar({ id, title, user, sideList, isOpen, onClose }: ownerProps) {
+export default function Sidebar({ id, title, user, sideList, isOpen, onClose }: societyProps) {
   const router = useRouter()
   const pathname = usePathname()
 

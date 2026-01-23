@@ -35,19 +35,26 @@ export const get = async (url: string, TOKEN: string) => {
     }
 }
 
-export const post = async ( url: string, data: string | FormData, TOKEN: string ) => {
+export const post = async ( url: string, data?: string | FormData, TOKEN?: string ) => {
     try {
-        const typed: string = (typeof data == 'string') ? "application/json" : "multipart/form-data"
+        // const typed: string = (typeof data == 'string') ? "application/json" : "multipart/form-data"
         let headers: any = {
             "Authorization": `Bearer ${TOKEN}` || ``,
-            "Content-Type": typed
+            // "Content-Type": typed
         }
+
+        
+            if (data !== undefined && !(data instanceof FormData)) {
+                headers["Content-Type"] = "application/json"
+            }
 
         let result = await axiosInstance.post(url, data, {headers})
         return {
             status: true,
             data: result.data
         }
+
+
     } catch (error) {
         const err = error as AxiosError<{ message: string, code: number }>
         if (err.response) {

@@ -10,6 +10,8 @@ import { toast } from "react-toastify";
 import { ButtonSuccess, ButtonWarning } from "@/components/button";
 import { InputGroupComponent } from "@/components/inputComponent";
 import Modal from "@/components/Modal";
+import FasilitasSelector from "./fasilitasSelector";
+import Select from "@/components/Select";
 
 const EditKos = ({ selectedKos }: { selectedKos: IKos }) => {
   const [isShow, setIsShow] = useState<boolean>(false);
@@ -20,7 +22,14 @@ const EditKos = ({ selectedKos }: { selectedKos: IKos }) => {
   const formRef = useRef<HTMLFormElement>(null);
 
   const openModal = () => {
-    setKos({ ...selectedKos });
+    setKos({
+      ...selectedKos,
+      fasilitas:
+        selectedKos.fasilitas?.map((kf: any) => ({
+          idFasilitas: kf.fasilitasId,
+          fasilitas: kf.fasilitas?.fasilitas || kf.fasilitas,
+        })) || [],
+    });
     setIsShow(true);
     if (formRef.current) formRef.current.reset();
   };
@@ -31,14 +40,19 @@ const EditKos = ({ selectedKos }: { selectedKos: IKos }) => {
       const url = `${BASE_API_URL}/kos/update/${selectedKos.idKos}`;
 
       const { name, address, price_per_month } = kos;
-      const payload = new FormData();
 
-      payload.append("name", name || "");
-      payload.append("address", address || "");
-      payload.append(
-        "price_per_month",
-        price_per_month !== undefined ? price_per_month.toString() : "0"
-      );
+      const payload = {
+        name: kos.name,
+        address: kos.address,
+        price_per_month:
+          Number(kos.price_per_month) !== undefined
+            ? price_per_month.toString()
+            : "0",
+        fasilitas: kos.fasilitas.map((f) => ({
+          id: f.idFasilitas,
+          name: f.fasilitas,
+        })),
+      };
 
       const { data } = await put(url, payload, TOKEN);
 
@@ -49,6 +63,8 @@ const EditKos = ({ selectedKos }: { selectedKos: IKos }) => {
           containerId: `toastKos`,
           type: "success",
         });
+
+        router.refresh();
       }
     } catch (error) {
       console.log(error);
@@ -144,6 +160,23 @@ const EditKos = ({ selectedKos }: { selectedKos: IKos }) => {
               onChange={(val) => setKos({ ...kos, address: val })}
               required={true}
               label="Address"
+            />
+            <Select
+              className="text-slate-500 p-2 rounded-2xl"
+              id={`gender`}
+              value={kos.gender}
+              label="Gender"
+              required={true}
+              onChange={(val) => setKos({ ...kos, gender: val })}
+            >
+              <option value=""> --- Select Gender --- </option>
+              <option value="mix">MIX</option>
+              <option value="male">MALE</option>
+              <option value="female">FEMALE</option>
+            </Select>
+            <FasilitasSelector
+              value={kos.fasilitas}
+              onChange={(data) => setKos({ ...kos, fasilitas: data })}
             />
           </div>
           {/* Modal Body End */}
